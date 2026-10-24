@@ -1094,7 +1094,6 @@ var b=hitBtn(lpx(e),lpy(e));
 if(b>3){b=-1}
 setP(e.pointerId,b)});
 function pend(e){
-if(e.pointerType!=='mouse'&&!fsTried){fsTried=1;if(!document.fullscreenElement){fs()}}
 if(TP[e.pointerId]!==undefined){setP(e.pointerId,-1);delete TP[e.pointerId]}}
 window.addEventListener('pointerup',pend);
 window.addEventListener('pointercancel',pend);
