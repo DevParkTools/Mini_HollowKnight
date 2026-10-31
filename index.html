@@ -29,7 +29,7 @@ var ow=[0,0,0,0,0],eq=[0,0,0,0,0];
 var wcs='',wcm=0,wcl=[''];
 var AC=null,MG=null,NB=null,last=0,acc=0;
 var sh=0,hintT=720,fsTried=0,hpFx=0,wsT=0,tpd=0,hpShow=5,hpC=0;
-var SK='ash_sewer_save_v6',slot=0,ts=0,tconf=0,SI=[null,null,null],SL1=['','',''],SL2=['','',''],migr=0;
+var SK='ash_sewer_save_v6',slot=0,ts=0,tconf=0,SI=[null,null,null],SL1=['','',''],SL2=['','',''],migr=0,tp=0,tmi=0,tcs=0,TMI=['게임 시작','소리','조작법','전체화면'],CKS=['이동  ← → ↑ ↓ (의자: ↑ 앉기 → I 부적)','점프  Z (길게 누르면 높이 점프)','공격  X (↑↓ 누른 채 위/아래 공격)','대시  C (그림자 망토 필요)','집중/주문  A (꾹: 치유, 탭: 영혼 불꽃)','꿈의 검  D (NPC의 속마음)','대화/벤치  ↑','벽 점프  벽에 붙은 채 Z','지도 Tab · 부적 I · 음소거 M · 전체화면 F','아무 키나 눌러 돌아가기'];
 function sk(i){return SK+'_s'+i}
 var BN=[56,200,332,462,575,655,740,812,915];
 var ZS=[0,86,300,500,720,966];
@@ -225,9 +225,22 @@ if(had){load();applyExl()}
 init();st=1;hintT=had?0:720;tconf=0;
 if(!had){save()}else{banner('저장된 의자에서 이어합니다')}}
 function toTitle(){
-save();readSlots();ts=slot;tconf=0;
+save();readSlots();ts=slot;tconf=0;tp=0;tmi=0;tcs=0;
 resetState();init();st=0;sT=0}
+function tmAct(i){
+snd('uic');
+if(i===0){tp=1;readSlots()}
+else if(i===1){mute=!mute;if(MG){MG.gain.value=mute?0:0.5}}
+else if(i===2){tcs=1}
+else{fs()}}
 function titleKey(c){
+if(tp===0){
+if(tcs){tcs=0;snd('ui');return}
+if(c==='ArrowUp'){tmi=(tmi+3)%4;snd('ui')}
+else if(c==='ArrowDown'){tmi=(tmi+1)%4;snd('ui')}
+else if(c==='KeyZ'||c==='Enter'||c==='Space'){tmAct(tmi)}
+return}
+if(c==='Escape'||c==='KeyC'){tp=0;tconf=0;snd('ui');return}
 if(tconf){if(c==='KeyZ'||c==='Enter'){delSlot(ts)}tconf=0;snd('ui');return}
 if(c==='ArrowUp'){ts=(ts+2)%3;snd('ui')}
 else if(c==='ArrowDown'){ts=(ts+1)%3;snd('ui')}
@@ -888,12 +901,33 @@ X.fillStyle='#cfe6f2';X.beginPath();X.arc(b.x,b.y,b.r,0,6.2832);X.fill();
 X.globalAlpha=0.7;X.strokeStyle='#e8f2f5';X.lineWidth=2;X.stroke();
 X.globalAlpha=1;
 txt(b.l,b.x,b.y+5,b.r>=34?16:12,'#fff')}}
+function drawTitleBG(){
+var i,ocx=camx,ocy=camy,g=X.createLinearGradient(0,0,0,WH);
+g.addColorStop(0,'#04070c');g.addColorStop(0.55,'#0c1624');g.addColorStop(1,'#101e2c');
+X.fillStyle=g;X.fillRect(0,0,W,WH);
+camx=tm*0.35;camy=0;
+layer(0.12,WH*0.7,WH*0.3,'#0d1a2a',70,11,0);
+arches(0.2,'#0a1420',300,37,WH*0.42,40);
+chains(0.3,'#101c2a',150,19);
+arches(0.45,'#070d16',360,53,WH*0.58,52);
+camx=ocx;camy=ocy;
+glow(W/2,WH*0.3,Math.min(W,WH)*0.6,0,0.1+Math.sin(tm*0.02)*0.03);
+X.fillStyle='rgba(180,220,255,0.35)';
+for(i=0;i<MO.length;i++){var o=MO[i];o.y-=o.s*0.3;if(o.y<0){o.y=WH}X.fillRect(((o.x*W/960-tm*o.s*0.4)%W+W)%W,o.y%WH,o.r,o.r)}
+X.globalAlpha=0.16;var fo=(tm*0.3)%512,fy=WH-130;
+X.drawImage(FGC,-fo,fy,512,96);X.drawImage(FGC,512-fo,fy,512,96);X.drawImage(FGC,1024-fo,fy,512,96);
+X.drawImage(FGC,-fo*1.4,fy+50,640,80);X.drawImage(FGC,640-fo*1.4,fy+50,640,80);X.drawImage(FGC,1280-fo*1.4,fy+50,640,80);
+X.globalAlpha=1;
+X.fillStyle='#04070c';X.fillRect(0,WH-26,W,26);
+var v=X.createRadialGradient(W/2,WH*0.42,Math.min(W,WH)*0.25,W/2,WH*0.42,Math.max(W,WH)*0.75);
+v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,0.75)');X.fillStyle=v;X.fillRect(0,0,W,WH)}
 function draw(){
 X.setTransform(sc,0,0,sc,0,0);
 X.fillStyle='#05080d';X.fillRect(0,0,W,H);
 var i;
 X.save();
 if(WH<H){X.beginPath();X.rect(0,0,W,WH);X.clip()}
+if(st===0){drawTitleBG()}else{
 drawBG();
 var sx=shake?(Math.random()-0.5)*shake:0,sy=shake?(Math.random()-0.5)*shake:0;
 X.save();
@@ -903,12 +937,12 @@ X.restore();
 X.save();
 X.translate(P.x+P.w/2-Math.floor(camx),P.y+P.h/2-Math.floor(camy));
 X.fillStyle=vg;X.fillRect(-W,-H,W*2,H*2);
-X.restore();
+X.restore()}
 if(ZO[clamp(Math.floor((camx+W/2)/T),0,MW-1)]>=1){X.globalAlpha=0.09;var fo=(tm*0.25+camx*0.5)%512;X.drawImage(FGC,-fo,WH-110,512,96);X.drawImage(FGC,512-fo,WH-110,512,96);if(W>1000){X.drawImage(FGC,1024-fo,WH-110,512,96)}X.drawImage(FGC,-fo*1.3,WH-60,640,70);X.drawImage(FGC,640-fo*1.3,WH-60,640,70);X.globalAlpha=1}
 if(hf>0){X.fillStyle='rgba(160,10,10,'+hf/40+')';X.fillRect(0,0,W,WH)}
 X.restore();
 if(WH<H){X.fillStyle='#070c14';X.fillRect(0,WH,W,H-WH);X.fillStyle='rgba(232,242,245,0.15)';X.fillRect(0,WH,W,1)}
-drawHUD();
+if(st!==0){drawHUD()}
 if(st===3){
 var dw=W-60;
 X.fillStyle='rgba(5,8,13,0.9)';X.fillRect(30,WH-170,dw,140);
@@ -926,7 +960,7 @@ if(st===4){
 txt('일시정지',W/2,110,34,'#e8f2f5');
 X.fillStyle='rgba(232,242,245,0.5)';X.fillRect(W/2-140,126,280,1);
 if(cs){
-var ks=['이동  ← → ↑ ↓ (의자: ↑ 앉기 → I 부적)','점프  Z (길게 누르면 높이 점프)','공격  X (↑↓ 누른 채 위/아래 공격)','대시  C (그림자 망토 필요)','집중/주문  A (꾹: 치유, 탭: 영혼 불꽃)','꿈의 검  D (NPC의 속마음)','대화/벤치  ↑','벽 점프  벽에 붙은 채 Z','지도 Tab · 부적 I · 음소거 M · 전체화면 F','아무 키나 눌러 돌아가기'];
+var ks=CKS;
 for(i=0;i<ks.length;i++){txt(ks[i],W/2,170+i*30,Math.min(18,W/26),'#9bb8c8')}}
 else{
 var pi=['게임으로 돌아가기','소리: '+(mute?'꺼짐':'켜짐'),'조작법 보기','전체화면 전환','타이틀로'];
@@ -978,11 +1012,27 @@ X.restore();X.fillStyle='rgba(0,0,0,'+Math.min(0.92,sT/90)+')';X.fillRect(0,0,W,
 for(i=0;i<EP.length;i++){if(sT>90+i*120){txt(EP[i],W/2,200+i*44,i===3?36:Math.min(22,W/26),'rgba(232,242,245,'+Math.min(1,(sT-90-i*120)/60)+')')}}
 if(sT>700){txt(tc?'터치해서 타이틀로':'아무 키나 눌러 타이틀로',W/2,H-60-oyo,16,'#9bb8c8')}}
 else if(st===0){
-X.restore();X.fillStyle='rgba(2,4,8,0.62)';X.fillRect(0,0,W,H);X.save();X.translate(0,oyo);
-var L=tlay(),ty=Math.round(L.cy*0.48),pu=0.5+Math.sin(tm*0.05)*0.5;
-glow(W/2,ty,150,0,0.12+pu*0.06);
+X.restore();X.save();X.translate(0,oyo);
+var L=tlay(),ty=Math.round(L.cy*0.48),pu=0.5+Math.sin(tm*0.05)*0.5,tw=Math.min(W-60,320);
+glow(W/2,ty,170,0,0.14+pu*0.06);
 txt('잿빛 하수도',W/2,ty,Math.min(54,W/9),'#f0f4f6');
-txt('작은 등불지기의 모험',W/2,ty+38,Math.min(18,W/26),'#9bb8c8');
+X.fillStyle='rgba(232,242,245,0.55)';X.fillRect(W/2-tw/2,ty+14,tw/2-14,1);X.fillRect(W/2+14,ty+14,tw/2-14,1);
+X.beginPath();X.moveTo(W/2,ty+8);X.lineTo(W/2+6,ty+14.5);X.lineTo(W/2,ty+21);X.lineTo(W/2-6,ty+14.5);X.fill();
+txt('작은 등불지기의 모험',W/2,ty+46,Math.min(18,W/26),'#9bb8c8');
+if(tp===0){
+if(tcs){
+X.fillStyle='rgba(2,4,8,0.9)';X.fillRect(0,0,W,H);
+txt('조작법',W/2,110,30,'#e8f2f5');
+for(i=0;i<CKS.length;i++){txt(CKS[i],W/2,170+i*30,Math.min(18,W/26),'#9bb8c8')}}
+else{
+var my=tml();
+for(i=0;i<4;i++){
+var sl0=i===tmi,lb=i===1?'소리  '+(mute?'꺼짐':'켜짐'):TMI[i],yy0=my+i*46;
+txt(lb,W/2,yy0,sl0?22:19,sl0?'#fff':'#7f95a4');
+if(sl0){var hw2=lb.length*(i===1?10:11)+34+pu*4;txt('«',W/2-hw2,yy0,22,'#9fd');txt('»',W/2+hw2,yy0,22,'#9fd')}}
+txt(tc?'항목을 눌러 선택':'↑↓ 선택  ·  Z 확인',W/2,Math.min(H-40-oyo,my+4*46+20),14,'#6a8090')}}
+else{
+txt('저장 파일 선택',W/2,L.cy-18,17,'#e8f2f5');
 for(i=0;i<3;i++){
 var yy=L.cy+i*(L.ch+L.gp),sl=i===ts;
 X.fillStyle=sl?'rgba(60,90,110,0.85)':'rgba(10,16,24,0.82)';X.fillRect(L.cx,yy,L.cw,L.ch);
@@ -995,7 +1045,7 @@ else{
 txt(SL1[i],L.cx+16,yy+46,20,SI[i]?'#e8f2f5':'#9bb8c8','left');
 txt(SL2[i],L.cx+16,yy+68,13,'#9bb8c8','left');
 if(SI[i]){txt('삭제',L.cx+L.cw-34,yy+L.ch/2,14,'#c88')}}}
-txt(tc?'슬롯을 눌러 시작':'↑↓ 선택  ·  Z 시작  ·  X 삭제',W/2,Math.min(H-40-oyo,L.cy+3*(L.ch+L.gp)+22),14,'#7f95a4')}
+txt(tc?'슬롯을 눌러 시작  ·  아래를 눌러 뒤로':'↑↓ 선택  ·  Z 시작  ·  X 삭제  ·  Esc 뒤로',W/2,Math.min(H-40-oyo,L.cy+3*(L.ch+L.gp)+22),14,'#7f95a4')}}
 X.restore();
 if(hintT>0&&st===1&&!tc){X.globalAlpha=Math.min(1,hintT/60);txt('←→ 이동 · Z 점프 · X 공격 · C 대시 · A 집중 · ↑ 대화/의자 · I 부적(의자에서) · Tab 지도 · Esc 정지',W/2,WH-16,Math.min(14,W/46),'#9bb8c8');X.globalAlpha=1}
 drawTouch()}
@@ -1168,12 +1218,19 @@ if(old===idx){return}
 if(old>=0){TB[old].n--;if(TB[old].n===0){K[TB[old].c]=0;onUp(TB[old].c)}}
 TP[id]=idx;
 if(idx>=0){TB[idx].n++;if(TB[idx].n===1){K[TB[idx].c]=1;onDown(TB[idx].c)}}}
+function tml(){return Math.max(250,Math.round(H*0.52))}
 function tlay(){
 var cw=Math.min(W-48,440);return {cw:cw,cx:(W-cw)/2,cy:Math.max(196,Math.round(H*0.34)),ch:82,gp:14}}
 function uiTap(x,y){
 var ly=y-oyo,i;
 if(st===0){
 var L=tlay();
+if(tp===0){
+if(tcs){tcs=0;return}
+var my2=tml();
+for(i=0;i<4;i++){if(Math.abs(x-W/2)<150&&Math.abs(ly-(my2+i*46-8))<22){tmi=i;tmAct(i);return}}
+return}
+if(ly>L.cy+3*(L.ch+L.gp)){tp=0;tconf=0;snd('ui');return}
 if(tconf){if(ly>L.cy+ts*(L.ch+L.gp)&&ly<L.cy+ts*(L.ch+L.gp)+L.ch){if(x<W/2){delSlot(ts);snd('ui')}tconf=0;return}tconf=0;return}
 for(i=0;i<3;i++){
 var yy=L.cy+i*(L.ch+L.gp);
